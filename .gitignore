@@ -1,0 +1,16 @@
+# environments / OS
+.venv/
+venv/
+__pycache__/
+.ipynb_checkpoints/
+.DS_Store
+__MACOSX/
+
+# generated datasets (large, reproducible with the simulators)
+sim_output/
+sim_output_rfi/
+sim_paired/
+*.npz
+
+# model weights (reproducible; use --with-models or Git LFS if you want them tracked)
+*.pt
