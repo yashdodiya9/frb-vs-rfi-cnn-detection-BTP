@@ -1,0 +1,172 @@
+{
+  "acc": {
+    "mean": 0.9484081506729126,
+    "std": 0.006146881471332134,
+    "min": 0.9428571462631226,
+    "max": 0.9575510025024414
+  },
+  "precision": {
+    "mean": 0.9589005034491868,
+    "std": 0.0038484391060786176,
+    "min": 0.9548494983277592,
+    "max": 0.964041095890411
+  },
+  "recall": {
+    "mean": 0.9369281045751634,
+    "std": 0.014550743046335439,
+    "min": 0.9199346405228758,
+    "max": 0.9591503267973857
+  },
+  "f1": {
+    "mean": 0.9477258550709975,
+    "std": 0.006611165637167155,
+    "min": 0.9414715719063544,
+    "max": 0.9575856443719414
+  },
+  "auc": {
+    "mean": 0.9891133288551963,
+    "std": 0.0038428573045490143,
+    "min": 0.984427811363806,
+    "max": 0.9945036198274851
+  },
+  "fp_by_component": {
+    "impulsive_rfi": {
+      "errors": 102,
+      "n": 736
+    },
+    "time_dropout": {
+      "errors": 39,
+      "n": 544
+    },
+    "pulsar_periodic": {
+      "errors": 23,
+      "n": 403
+    },
+    "aircraft_rfi": {
+      "errors": 17,
+      "n": 300
+    },
+    "gain_jump": {
+      "errors": 20,
+      "n": 360
+    },
+    "rfi_storm": {
+      "errors": 26,
+      "n": 482
+    },
+    "scintillation_solar": {
+      "errors": 10,
+      "n": 195
+    },
+    "narrowband_bright": {
+      "errors": 42,
+      "n": 827
+    },
+    "quantization": {
+      "errors": 40,
+      "n": 947
+    },
+    "ALL RFI": {
+      "errors": 123,
+      "n": 3065
+    },
+    "periodic_rfi": {
+      "errors": 10,
+      "n": 273
+    },
+    "gain_drift_smooth": {
+      "errors": 38,
+      "n": 1047
+    },
+    "narrowband_zero": {
+      "errors": 17,
+      "n": 573
+    },
+    "scintillation_ionospheric": {
+      "errors": 3,
+      "n": 136
+    },
+    "pure_noise": {
+      "errors": 3,
+      "n": 255
+    },
+    "(plain / pure noise)": {
+      "errors": 0,
+      "n": 182
+    }
+  },
+  "fn_by_group": {
+    "brightness: very faint (15-30%)": {
+      "errors": 56,
+      "n": 315
+    },
+    "also contains: impulsive_rfi": {
+      "errors": 125,
+      "n": 709
+    },
+    "also contains: aircraft_rfi": {
+      "errors": 27,
+      "n": 237
+    },
+    "also contains: narrowband_zero": {
+      "errors": 51,
+      "n": 580
+    },
+    "brightness: faint (30-60%)": {
+      "errors": 59,
+      "n": 752
+    },
+    "also contains: time_dropout": {
+      "errors": 37,
+      "n": 521
+    },
+    "also contains: rfi_storm": {
+      "errors": 36,
+      "n": 526
+    },
+    "also contains: periodic_rfi": {
+      "errors": 19,
+      "n": 278
+    },
+    "also contains: pulsar_periodic": {
+      "errors": 31,
+      "n": 456
+    },
+    "also contains: gain_drift_smooth": {
+      "errors": 67,
+      "n": 1014
+    },
+    "ALL FRB": {
+      "errors": 193,
+      "n": 3060
+    },
+    "also contains: quantization": {
+      "errors": 55,
+      "n": 915
+    },
+    "also contains: narrowband_bright": {
+      "errors": 50,
+      "n": 866
+    },
+    "also contains: gain_jump": {
+      "errors": 17,
+      "n": 348
+    },
+    "also contains: scintillation_ionospheric": {
+      "errors": 6,
+      "n": 126
+    },
+    "also contains: scintillation_solar": {
+      "errors": 9,
+      "n": 203
+    },
+    "brightness: full fluence": {
+      "errors": 78,
+      "n": 1993
+    },
+    "also contains: pure_noise": {
+      "errors": 7,
+      "n": 277
+    }
+  }
+}

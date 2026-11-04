@@ -1,0 +1,56 @@
+MULTI-SEED RESULTS  (5 seeds, each with its own split + initialisation)
+------------------------------------------------------------------------------
+ seed     acc    prec  recall      F1     AUC  errors  best ep/ran
+    1  0.9429  0.9640  0.9199  0.9415  0.9901  70/1225    58/60   
+    2  0.9445  0.9548  0.9330  0.9438  0.9866  68/1225    31/41   
+    3  0.9518  0.9616  0.9412  0.9513  0.9899  59/1225    42/52   
+    4  0.9576  0.9560  0.9592  0.9576  0.9945  52/1225    60/60   
+   42  0.9453  0.9580  0.9314  0.9445  0.9844  67/1225    28/38   
+------------------------------------------------------------------------------
+       acc:  0.9484 +- 0.0061    (min 0.9429, max 0.9576)
+ precision:  0.9589 +- 0.0038    (min 0.9548, max 0.9640)
+    recall:  0.9369 +- 0.0146    (min 0.9199, max 0.9592)
+        f1:  0.9477 +- 0.0066    (min 0.9415, max 0.9576)
+       auc:  0.9891 +- 0.0038    (min 0.9844, max 0.9945)
+
+convergence: seeds [4] hit the epoch cap while still improving -> raise --epochs.
+
+ERROR BREAKDOWN (all seeds pooled)
+------------------------------------------------------------------------------
+False-positive rate for RFI images, by what the image contains (image can have several):
+   impulsive_rfi                        102 / 736    =  13.9% wrongly called FRB
+   time_dropout                          39 / 544    =   7.2% wrongly called FRB
+   pulsar_periodic                       23 / 403    =   5.7% wrongly called FRB
+   aircraft_rfi                          17 / 300    =   5.7% wrongly called FRB
+   gain_jump                             20 / 360    =   5.6% wrongly called FRB
+   rfi_storm                             26 / 482    =   5.4% wrongly called FRB
+   scintillation_solar                   10 / 195    =   5.1% wrongly called FRB
+   narrowband_bright                     42 / 827    =   5.1% wrongly called FRB
+   quantization                          40 / 947    =   4.2% wrongly called FRB
+   ALL RFI                              123 / 3065   =   4.0% wrongly called FRB
+   periodic_rfi                          10 / 273    =   3.7% wrongly called FRB
+   gain_drift_smooth                     38 / 1047   =   3.6% wrongly called FRB
+   narrowband_zero                       17 / 573    =   3.0% wrongly called FRB
+   scintillation_ionospheric              3 / 136    =   2.2% wrongly called FRB
+   pure_noise                             3 / 255    =   1.2% wrongly called FRB
+   (plain / pure noise)                   0 / 182    =   0.0% wrongly called FRB
+
+Miss rate (false negatives) for FRB images:
+   brightness: very faint (15-30%)       56 / 315    =  17.8% missed
+   also contains: impulsive_rfi         125 / 709    =  17.6% missed
+   also contains: aircraft_rfi           27 / 237    =  11.4% missed
+   also contains: narrowband_zero        51 / 580    =   8.8% missed
+   brightness: faint (30-60%)            59 / 752    =   7.8% missed
+   also contains: time_dropout           37 / 521    =   7.1% missed
+   also contains: rfi_storm              36 / 526    =   6.8% missed
+   also contains: periodic_rfi           19 / 278    =   6.8% missed
+   also contains: pulsar_periodic        31 / 456    =   6.8% missed
+   also contains: gain_drift_smooth      67 / 1014   =   6.6% missed
+   ALL FRB                              193 / 3060   =   6.3% missed
+   also contains: quantization           55 / 915    =   6.0% missed
+   also contains: narrowband_bright      50 / 866    =   5.8% missed
+   also contains: gain_jump              17 / 348    =   4.9% missed
+   also contains: scintillation_ionospheric     6 / 126    =   4.8% missed
+   also contains: scintillation_solar     9 / 203    =   4.4% missed
+   brightness: full fluence              78 / 1993   =   3.9% missed
+   also contains: pure_noise              7 / 277    =   2.5% missed
