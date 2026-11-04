@@ -1,0 +1,197 @@
+[
+  {
+    "seed": "seed_1",
+    "all": {
+      "pair_win": 0.99,
+      "recall_with": 0.915,
+      "spec_without": 0.9766666666666667,
+      "n": 600
+    },
+    "no_quant": {
+      "pair_win": 0.9872448979591837,
+      "recall_with": 0.9030612244897959,
+      "spec_without": 0.9795918367346939,
+      "n": 392
+    },
+    "quant": {
+      "pair_win": 0.9951923076923077,
+      "recall_with": 0.9375,
+      "spec_without": 0.9711538461538461,
+      "n": 208
+    },
+    "shuffled": {
+      "pair_win": 0.765,
+      "recall_with": 0.25666666666666665,
+      "spec_without": 0.925,
+      "n": 600
+    },
+    "faint_full": {
+      "pair_win": 0.9972677595628415,
+      "recall_with": 0.9480874316939891,
+      "spec_without": 0.9808743169398907,
+      "n": 366
+    },
+    "faint_low": {
+      "pair_win": 0.9786324786324786,
+      "recall_with": 0.8632478632478633,
+      "spec_without": 0.9700854700854701,
+      "n": 234
+    }
+  },
+  {
+    "seed": "seed_2",
+    "all": {
+      "pair_win": 0.985,
+      "recall_with": 0.9266666666666666,
+      "spec_without": 0.9466666666666667,
+      "n": 600
+    },
+    "no_quant": {
+      "pair_win": 0.9872448979591837,
+      "recall_with": 0.9209183673469388,
+      "spec_without": 0.9438775510204082,
+      "n": 392
+    },
+    "quant": {
+      "pair_win": 0.9807692307692307,
+      "recall_with": 0.9375,
+      "spec_without": 0.9519230769230769,
+      "n": 208
+    },
+    "shuffled": {
+      "pair_win": 0.6733333333333333,
+      "recall_with": 0.2733333333333333,
+      "spec_without": 0.8583333333333333,
+      "n": 600
+    },
+    "faint_full": {
+      "pair_win": 0.9808743169398907,
+      "recall_with": 0.9508196721311475,
+      "spec_without": 0.9508196721311475,
+      "n": 366
+    },
+    "faint_low": {
+      "pair_win": 0.9914529914529915,
+      "recall_with": 0.8888888888888888,
+      "spec_without": 0.9401709401709402,
+      "n": 234
+    }
+  },
+  {
+    "seed": "seed_3",
+    "all": {
+      "pair_win": 0.9816666666666667,
+      "recall_with": 0.935,
+      "spec_without": 0.9566666666666667,
+      "n": 600
+    },
+    "no_quant": {
+      "pair_win": 0.9795918367346939,
+      "recall_with": 0.9336734693877551,
+      "spec_without": 0.9566326530612245,
+      "n": 392
+    },
+    "quant": {
+      "pair_win": 0.9855769230769231,
+      "recall_with": 0.9375,
+      "spec_without": 0.9567307692307693,
+      "n": 208
+    },
+    "shuffled": {
+      "pair_win": 0.7016666666666667,
+      "recall_with": 0.27166666666666667,
+      "spec_without": 0.8783333333333333,
+      "n": 600
+    },
+    "faint_full": {
+      "pair_win": 0.9836065573770492,
+      "recall_with": 0.9699453551912568,
+      "spec_without": 0.9617486338797814,
+      "n": 366
+    },
+    "faint_low": {
+      "pair_win": 0.9786324786324786,
+      "recall_with": 0.8803418803418803,
+      "spec_without": 0.9487179487179487,
+      "n": 234
+    }
+  },
+  {
+    "seed": "seed_4",
+    "all": {
+      "pair_win": 0.9866666666666667,
+      "recall_with": 0.9183333333333333,
+      "spec_without": 0.9566666666666667,
+      "n": 600
+    },
+    "no_quant": {
+      "pair_win": 0.9872448979591837,
+      "recall_with": 0.9005102040816326,
+      "spec_without": 0.9566326530612245,
+      "n": 392
+    },
+    "quant": {
+      "pair_win": 0.9855769230769231,
+      "recall_with": 0.9519230769230769,
+      "spec_without": 0.9567307692307693,
+      "n": 208
+    },
+    "shuffled": {
+      "pair_win": 0.76,
+      "recall_with": 0.395,
+      "spec_without": 0.8216666666666667,
+      "n": 600
+    },
+    "faint_full": {
+      "pair_win": 0.994535519125683,
+      "recall_with": 0.9508196721311475,
+      "spec_without": 0.9562841530054644,
+      "n": 366
+    },
+    "faint_low": {
+      "pair_win": 0.9743589743589743,
+      "recall_with": 0.8675213675213675,
+      "spec_without": 0.9572649572649573,
+      "n": 234
+    }
+  },
+  {
+    "seed": "seed_42",
+    "all": {
+      "pair_win": 0.9866666666666667,
+      "recall_with": 0.925,
+      "spec_without": 0.96,
+      "n": 600
+    },
+    "no_quant": {
+      "pair_win": 0.9821428571428571,
+      "recall_with": 0.9107142857142857,
+      "spec_without": 0.9591836734693877,
+      "n": 392
+    },
+    "quant": {
+      "pair_win": 0.9951923076923077,
+      "recall_with": 0.9519230769230769,
+      "spec_without": 0.9615384615384616,
+      "n": 208
+    },
+    "shuffled": {
+      "pair_win": 0.72,
+      "recall_with": 0.18833333333333332,
+      "spec_without": 0.9066666666666666,
+      "n": 600
+    },
+    "faint_full": {
+      "pair_win": 0.9890710382513661,
+      "recall_with": 0.9644808743169399,
+      "spec_without": 0.9562841530054644,
+      "n": 366
+    },
+    "faint_low": {
+      "pair_win": 0.9829059829059829,
+      "recall_with": 0.8632478632478633,
+      "spec_without": 0.9658119658119658,
+      "n": 234
+    }
+  }
+]
