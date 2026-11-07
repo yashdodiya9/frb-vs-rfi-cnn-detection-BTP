@@ -69,7 +69,8 @@ def generate_one(row: pd.Series, freqs_mhz: np.ndarray, rng: np.random.Generator
     """One negative-class (no burst) image. `row` only sets the window size
     (same choose_grid() as the positive class)."""
     num_time, tsamp_s = choose_grid(row, dispersed)
-    noisy, _bandpass, chan_ok, applied = render_image(freqs_mhz, num_time, tsamp_s, rng, burst_model=None)
+    noisy, _bandpass, chan_ok, applied = render_image(freqs_mhz, num_time, tsamp_s, rng, burst_model=None,
+                                                     dm_candidate=float(row["dm_fitb"]))
     time_axis_ms = (np.arange(num_time) - num_time // 2) * tsamp_s * 1e3
     return noisy, time_axis_ms, tsamp_s, chan_ok, applied
 

@@ -184,7 +184,8 @@ def simulate_one(row: pd.Series, freqs_mhz: np.ndarray, rng: np.random.Generator
     # same RFI / drift / dropout / scintillation / quantization content as
     # negatives; the only difference between classes is the burst itself.
     noisy, bandpass, chan_ok, applied = render_image(freqs_mhz, num_time, tsamp_s, rng,
-                                                       burst_model=model)
+                                                       burst_model=model,
+                                                       dm_candidate=float(row["dm_fitb"]))
     rfi_mask = chan_ok
 
     return noisy, model, times_s, params, bandpass, rfi_mask, pos_frac, faint_scale, applied

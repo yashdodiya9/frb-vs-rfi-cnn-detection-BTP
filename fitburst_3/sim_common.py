@@ -171,6 +171,8 @@ def verify_matched_window_distributions(frb_num_time: list, rfi_num_time: list, 
 RFI_BAND_CENTERS_MHZ = [550.0, 625.0, 742.5]
 AIRCRAFT_PROB = 0.10        # persistent-for-the-whole-window RFI with radar-PRF pulsing + Doppler drift
 IMPULSIVE_RFI_PROB = 0.25   # short broadband hits (satellites, cell phones, local electronics)
+IMPULSIVE_MIMIC_FRAC = 0.15 # fraction of impulsive events kept as the OLD vertical (burst-mimicking) streak;
+                            # the rest are rendered as real zero-DM impulses seen after dedispersion (Step 2)
 PERIODIC_RFI_PROB = 0.10    # switching power supplies, radar side-lobes
 RFI_STORM_PROB = 0.18       # patchy fake dispersion sweep at random DM -- the paper's own
                              # unsolved "RFI storm" false-positive class. Raised relative to the
@@ -276,23 +278,53 @@ def add_rfi_storm(freqs_mhz: np.ndarray, rng: np.random.Generator, extra_signal:
     applied.append(f"rfi_storm:dm={fake_dm:.0f}")
 
 
-def add_impulsive_rfi(rng: np.random.Generator, extra_signal: np.ndarray, sigma_base: float,
-                       time_axis_ms: np.ndarray, applied: list) -> None:
-    """Short broadband impulsive hits (satellites, cell phones, local
-    electronics) -- undispersed, the classic case that must be told apart
-    from a burst by the ABSENCE of a frequency-time sweep."""
+def add_impulsive_rfi(freqs_mhz: np.ndarray, rng: np.random.Generator, extra_signal: np.ndarray,
+                       sigma_base: float, time_axis_ms: np.ndarray, applied: list,
+                       dm_candidate: Optional[float] = None) -> None:
+    """Short broadband impulsive hits (satellites, cell phones, local electronics).
+
+    STEP 2 CHANGE. These hits are physically UNDISPERSED (zero DM). The images
+    are dedispersed at the candidate's DM, so a real zero-DM impulse appears
+    as an INVERTED sweep: after removing the delay K*DM*(f^-2 - f_ref^-2) it
+    arrives EARLIER at low frequencies. For DM = 100-1000 that sweep spans
+    2-19 s across the band, far more than the window, so only a short
+    diagonal dash (a few to a few tens of channels) is visible -- not a
+    vertical streak. Before this change every impulse was drawn as a vertical
+    streak, i.e. indistinguishable from a real burst except by its spectrum;
+    that single case caused 83% of the false positives in Step 1.
+
+    A fraction IMPULSIVE_MIMIC_FRAC is still drawn the old way (vertical,
+    burst-mimicking) as a deliberately hard negative. dm_candidate=None
+    reproduces the old behaviour for every event."""
     if rng.random() >= IMPULSIVE_RFI_PROB:
         return
     nchan = extra_signal.shape[0]
     n_events = int(rng.integers(1, 4))
+    n_swept = n_mimic = 0
+    w_min = NATIVE_TSAMP_S * 1e3 / 2
     for _ in range(n_events):
-        t0 = rng.uniform(time_axis_ms[0], time_axis_ms[-1])
         width_ms = rng.uniform(NATIVE_TSAMP_S * 1e3 * 0.5, NATIVE_TSAMP_S * 1e3 * 3.0)
         amp = sigma_base * rng.uniform(6.0, 40.0)
         chan_jitter = rng.uniform(0.4, 1.0, size=nchan)
-        profile = np.exp(-0.5 * ((time_axis_ms - t0) / max(width_ms, NATIVE_TSAMP_S * 1e3 / 2)) ** 2)
-        extra_signal += amp * np.outer(chan_jitter, profile)
-    applied.append(f"impulsive_rfi:{n_events}")
+        t_c = rng.uniform(time_axis_ms[0], time_axis_ms[-1])
+        f_c = rng.uniform(freqs_mhz.min(), freqs_mhz.max())
+        mimic = (dm_candidate is None) or (rng.random() < IMPULSIVE_MIMIC_FRAC)
+        w = max(width_ms, w_min)
+        if mimic:
+            profile = np.exp(-0.5 * ((time_axis_ms - t_c) / w) ** 2)
+            extra_signal += amp * np.outer(chan_jitter, profile)
+            n_mimic += 1
+        else:
+            # time at which each channel sees the pulse after dedispersing at dm_candidate;
+            # the pulse crosses the window at frequency f_c at time t_c
+            t_chan = t_c - K_DM * dm_candidate * (freqs_mhz ** -2 - f_c ** -2)
+            profile = np.exp(-0.5 * ((time_axis_ms[None, :] - t_chan[:, None]) / w) ** 2)
+            extra_signal += amp * chan_jitter[:, None] * profile
+            n_swept += 1
+    if n_swept:
+        applied.append(f"impulsive_rfi:{n_swept}")
+    if n_mimic:
+        applied.append(f"impulsive_mimic:{n_mimic}")
 
 
 def add_periodic_rfi(freqs_mhz: np.ndarray, rng: np.random.Generator, extra_signal: np.ndarray,
@@ -435,14 +467,14 @@ def apply_quantization(data: np.ndarray, rng: np.random.Generator, applied: list
 def compose_noise_environment(freqs_mhz: np.ndarray, rng: np.random.Generator, sigma_base: float,
                                time_axis_ms: np.ndarray, noise_scale_freq: np.ndarray,
                                zero_mask: np.ndarray, extra_signal: np.ndarray,
-                               applied: list) -> Optional[np.ndarray]:
+                               applied: list, dm_candidate: Optional[float] = None) -> Optional[np.ndarray]:
     """Randomly layers the RFI/instrumental/confusion-source components
     onto the given (already-allocated) arrays -- matching how real data
     shows multiple effects simultaneously, not just one at a time. Returns
     an optional 2D scintillation multiplier (time-AND-frequency varying,
     doesn't fit the 1D noise_scale_freq contract the rest share)."""
     add_randomized_narrowband_rfi(freqs_mhz, rng, noise_scale_freq, zero_mask, applied)
-    add_impulsive_rfi(rng, extra_signal, sigma_base, time_axis_ms, applied)
+    add_impulsive_rfi(freqs_mhz, rng, extra_signal, sigma_base, time_axis_ms, applied, dm_candidate)
     add_periodic_rfi(freqs_mhz, rng, extra_signal, sigma_base, time_axis_ms, applied)
     add_aircraft_rfi(freqs_mhz, rng, extra_signal, sigma_base, time_axis_ms, applied)
     add_rfi_storm(freqs_mhz, rng, extra_signal, sigma_base, time_axis_ms, applied)
@@ -475,7 +507,8 @@ def load_catalog(csv_path: str, verbose: bool = True) -> pd.DataFrame:
 # THE single rendering path (Step 0 fix)
 # ======================================================================
 def render_image(freqs_mhz: np.ndarray, num_time: int, tsamp_s: float,
-                 rng: np.random.Generator, burst_model: Optional[np.ndarray] = None):
+                 rng: np.random.Generator, burst_model: Optional[np.ndarray] = None,
+                 dm_candidate: Optional[float] = None):
     """Render ONE image. Used for BOTH classes:
         negative: burst_model=None
         positive: burst_model=<fitburst model, already scaled to fluence>
@@ -489,6 +522,9 @@ def render_image(freqs_mhz: np.ndarray, num_time: int, tsamp_s: float,
     Before this fix the positive generator applied none of the
     drift / dropout / scintillation / quantization / RFI steps, so
     "anything irregular => RFI" was a free shortcut.
+
+    dm_candidate: DM (pc cm^-3) the image is dedispersed at; used to render zero-DM RFI
+    impulses with their correct inverted sweep (Step 2). None = old behaviour.
 
     Returns (noisy, bandpass, chan_ok, applied)."""
     applied: list = ["ambient"]
@@ -505,7 +541,7 @@ def render_image(freqs_mhz: np.ndarray, num_time: int, tsamp_s: float,
     scint_factor = None
     if not is_pure:
         scint_factor = compose_noise_environment(freqs_mhz, rng, NOISE_SIGMA, time_axis_ms,
-                                                   noise_scale_freq, zero_mask, extra_signal, applied)
+                                                   noise_scale_freq, zero_mask, extra_signal, applied, dm_candidate)
         add_time_dropout(len(freqs_mhz), rng, zero_mask, applied)
     else:
         applied.append("pure_noise")
