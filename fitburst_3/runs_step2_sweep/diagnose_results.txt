@@ -1,0 +1,62 @@
+10 models pooled | 3000 burst images, 300 burst-free
+S/N band 8-20: 621 burst images, overall recall 0.678  (95% CI 0.649-0.707)
+
+Recall by NATIVE WINDOW LENGTH (samples; the CNN sees 256 bins -> long windows are downsampled):
+            group     n  recall          95% CI  geo-mean S/N
+             0-64   314   0.704  [0.660, 0.744]          13.0
+           64-128   119   0.746  [0.684, 0.806]          12.9
+          128-256    79   0.706  [0.623, 0.786]          12.8
+          256-512   109   0.509  [0.440, 0.580]          12.8
+   check: 'geo-mean S/N' should be similar across rows, otherwise S/N is confounding the comparison
+
+Recall by FRACTION OF MASKED CHANNELS (terciles):
+            group     n  recall          95% CI  geo-mean S/N
+          0-0.217   207   0.598  [0.542, 0.649]          12.9
+      0.217-0.375   149   0.683  [0.619, 0.744]          13.0
+      0.375-0.535   265   0.738  [0.698, 0.783]          12.9
+
+Recall by BURST WIDTH in ms (catalog, terciles):
+            group     n  recall          95% CI  geo-mean S/N
+    0.00922-0.521   207   0.745  [0.695, 0.794]          12.9
+       0.521-1.41   206   0.650  [0.596, 0.702]          13.0
+        1.41-22.3   208   0.640  [0.593, 0.690]          12.9
+
+Recall by SCATTERING TIME in ms (catalog, terciles):
+            group     n  recall          95% CI  geo-mean S/N
+           0-3.46   414   0.695  [0.660, 0.730]          12.9
+        3.46-95.3   207   0.645  [0.595, 0.694]          12.9
+
+Recall WITH vs WITHOUT each effect present in the image (same S/N band), sorted by difference:
+   effect                             with (n)      without (n)    diff
+   periodic_rfi                 0.576 (  68)    0.691 ( 553)  -0.114
+   time_dropout                 0.614 ( 110)    0.692 ( 511)  -0.078
+   aircraft_rfi                 0.617 (  60)    0.685 ( 561)  -0.068
+   scintillation_solar          0.620 (  59)    0.684 ( 562)  -0.064
+   narrowband_bright            0.645 ( 165)    0.690 ( 456)  -0.044
+   impulsive_mimic              0.646 (  37)    0.680 ( 584)  -0.034
+   impulsive_rfi                0.675 ( 132)    0.679 ( 489)  -0.004
+   pulsar_periodic              0.675 (  63)    0.678 ( 558)  -0.004
+   rfi_storm                    0.678 ( 103)    0.678 ( 518)  -0.001
+   gain_drift_smooth            0.682 ( 229)    0.676 ( 392)  +0.006
+   narrowband_zero              0.698 ( 115)    0.674 ( 506)  +0.025
+   quantization                 0.712 ( 190)    0.663 ( 431)  +0.049
+   gain_jump                    0.746 (  81)    0.668 ( 540)  +0.078
+   pure_noise                   0.777 (  56)    0.668 ( 565)  +0.108
+
+FALSE-POSITIVE rate on burst-free copies, by effect present in that background:
+   impulsive_rfi                0.071  [0.032, 0.119]  n=63
+   pulsar_periodic              0.039  [0.000, 0.087]  n=31
+   quantization                 0.033  [0.013, 0.057]  n=91
+   rfi_storm                    0.029  [0.004, 0.064]  n=52
+   narrowband_bright            0.029  [0.006, 0.055]  n=80
+   time_dropout                 0.022  [0.004, 0.045]  n=51
+   ALL burst-free images        0.020  [0.011, 0.031]  n=300
+   gain_drift_smooth            0.019  [0.005, 0.039]  n=109
+   narrowband_zero              0.011  [0.000, 0.026]  n=57
+   gain_jump                    0.000  [0.000, 0.000]  n=42
+
+S/N at 50% recall by window length (pooled models, logistic fit):
+      0-64   samples (n=1640): S/N50 = 10.16
+     64-128  samples (n= 540): S/N50 = 9.04
+    128-256  samples (n= 360): S/N50 = 8.59
+    256-inf  samples (n= 460): S/N50 = 11.70
