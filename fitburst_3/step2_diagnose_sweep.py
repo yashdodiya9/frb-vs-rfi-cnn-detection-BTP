@@ -125,14 +125,15 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from step1_lib import pick_device, preprocess_array
+    from step1_lib import RawScorer, pick_device
 
     files = sorted(glob.glob(os.path.join(args.sweep_dir, "*.npz")))
     if not files:
         raise SystemExit("no sweep images -- run step2_make_sweep.py first")
     from sim_common import load_catalog      # same one-row-per-event filter the simulators use
     catalog = load_catalog(args.catalog, verbose=False) if os.path.exists(args.catalog) else None
-    t, arrays = build_table(files, preprocess_array, catalog)
+    t, arrays = build_table(files, lambda a: a, catalog)      # arrays = RAW images
+    scorer = RawScorer(arrays)
     os.makedirs(args.out, exist_ok=True)
 
     score_path = os.path.join(args.out, "sweep_scores.npz")
@@ -140,8 +141,8 @@ def main():
     device = pick_device(args.force_cpu)
     for spec in args.groups:
         gname, root = spec.split("=", 1)
-        for seed, p in score_group(root, arrays, device).items():
-            names.append(f"{gname} {seed}"); H.append(p > 0.5)
+        for seed, p in score_group(root, scorer, device).items():
+            names.append(f"{gname} | {seed}"); H.append(p > 0.5)
     H = np.array(H)
     np.savez(score_path, names=np.array(names), hits=H)
     hit = H.mean(axis=0)  # fraction of the 10 models that detect each image
@@ -188,14 +189,23 @@ def main():
     for r in res["fp"]:
         P(f"   {r['component']:<26} {r['recall']:>7.3f}  [{r['lo']:.3f}, {r['hi']:.3f}]  n={r['n']}")
 
-    # S/N50 by window-length group (logistic fit), needs enough images
+    # S/N50 by window-length group, PER MODEL GROUP (logistic fit); needs enough images
     from step2_eval_sweep import logistic_snr
-    P("\nS/N at 50% recall by window length (pooled models, logistic fit):")
+    gnames = sorted({n.rsplit(" | ", 1)[0] for n in names}, key=lambda g: [n.rsplit(" | ", 1)[0] for n in names].index(g))
+    P("\nS/N at 50% recall by NATIVE WINDOW LENGTH, per model group (logistic fit):")
+    P(f"   {'window (samples)':<20}" + "".join(f"{g:>34}" for g in gnames))
+    res["snr50_by_window"] = {}
     for lo, hi in zip([0, 64, 128, 256], [64, 128, 256, 1e9]):
         m = (scale > 0) & (t.num_time.values >= lo) & (t.num_time.values < hi)
-        if m.sum() >= 150:
-            xs = np.tile(snr[m], len(names)); ys = H[:, m].reshape(-1)   # both laid out model-major
-            P(f"   {lo:>4}-{'inf' if hi > 1e8 else int(hi):<4} samples (n={int(m.sum()):>4}): S/N50 = {logistic_snr(xs, ys, 0.5):.2f}")
+        if m.sum() < 150:
+            continue
+        row, label = [], f"{lo}-{'inf' if hi > 1e8 else int(hi)} (n={int(m.sum())})"
+        for g in gnames:
+            idx = [i for i, n in enumerate(names) if n.rsplit(" | ", 1)[0] == g]
+            xs = np.tile(snr[m], len(idx)); ys = H[idx][:, m].reshape(-1)      # both laid out model-major
+            v = logistic_snr(xs, ys, 0.5); row.append(v)
+            res["snr50_by_window"].setdefault(g, {})[label] = v
+        P(f"   {label:<20}" + "".join(f"{v:>34.2f}" for v in row))
 
     json.dump(res, open(os.path.join(args.out, "diagnose_results.json"), "w"), indent=2, default=float)
     open(os.path.join(args.out, "diagnose_results.txt"), "w").write("\n".join(out))

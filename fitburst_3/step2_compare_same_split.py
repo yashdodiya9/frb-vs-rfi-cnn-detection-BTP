@@ -19,7 +19,7 @@ import numpy as np
 import torch
 from scipy.stats import binomtest
 from sklearn.metrics import roc_auc_score
-from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array
+from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array, require_interp
 
 
 def f1(y, pred):
@@ -47,7 +47,8 @@ def main():
         paths = [r["path"] for r in recs]; y = np.array([int(r["label"]) for r in recs])
         p_new = np.array([float(r["prob"]) for r in recs])
         arrays = [preprocess_array(np.load(p, allow_pickle=True)["data_full"]) for p in paths]
-        m = FRBCNN().to(device); m.load_state_dict(torch.load(ck, map_location=device)["model_state"])
+        _ck = torch.load(ck, map_location=device); require_interp(_ck, ck)
+        m = FRBCNN().to(device); m.load_state_dict(_ck["model_state"])
         p_old = predict_arrays(m, arrays, device)
         pn, po = p_new > 0.5, p_old > 0.5
         b = int(((po == y) & (pn != y)).sum()); c = int(((pn == y) & (po != y)).sum())

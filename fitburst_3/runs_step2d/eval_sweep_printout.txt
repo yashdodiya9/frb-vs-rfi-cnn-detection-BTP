@@ -1,0 +1,18 @@
+8789 sweep images (799 burst-free); measured S/N of bursts: 5th/50th/95th percentile = 1.9 / 25.6 / 298.2
+
+group / seed            S/N @50%  S/N @90%  FP(no burst)  recall@0.07   @0.15   @0.30   @1.00
+Step 2 models (interp) seed_1     10.33     21.70         0.023        0.489   0.780   0.912   0.979
+Step 2 models (interp) seed_2      9.90     20.63         0.026        0.506   0.790   0.920   0.979
+Step 2 models (interp) seed_3     10.75     22.79         0.033        0.466   0.763   0.902   0.975
+Step 2 models (interp) seed_4      9.30     18.56         0.031        0.532   0.800   0.925   0.982
+Step 2 models (interp) seed_42      8.40     19.24         0.038        0.569   0.827   0.927   0.977
+Step 2 models (interp) MEAN      9.74     20.58         0.030   (S/N@50% std 0.92, @90% std 1.73)
+--------------------------------------------------------------------------------------------------
+Area-averaging models seed_1      8.66     21.84         0.026        0.557   0.824   0.927   0.974
+Area-averaging models seed_2     11.11     24.61         0.015        0.476   0.752   0.899   0.970
+Area-averaging models seed_3     10.96     23.84         0.010        0.484   0.761   0.904   0.971
+Area-averaging models seed_4      9.25     18.03         0.030        0.529   0.811   0.925   0.984
+Area-averaging models seed_42      9.68     20.40         0.024        0.511   0.796   0.921   0.980
+Area-averaging models MEAN      9.93     21.74         0.021   (S/N@50% std 1.07, @90% std 2.66)
+--------------------------------------------------------------------------------------------------
+saved runs/step2d_sweep/sweep_results.json and sweep_recall_vs_snr.png

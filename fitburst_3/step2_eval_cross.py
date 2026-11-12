@@ -21,7 +21,7 @@ from pathlib import Path
 import numpy as np
 import torch
 from sklearn.metrics import roc_auc_score
-from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array
+from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array, require_interp
 
 
 def group(meta):
@@ -61,7 +61,8 @@ def main():
         raise SystemExit(f"no checkpoints in {args.ckpt_root}")
     rows = []
     for ck in ckpts:
-        m = FRBCNN().to(device); m.load_state_dict(torch.load(ck, map_location=device)["model_state"])
+        _ck = torch.load(ck, map_location=device); require_interp(_ck, ck)
+        m = FRBCNN().to(device); m.load_state_dict(_ck["model_state"])
         p = predict_arrays(m, arrays, device); pred = p > 0.5
         r = {"seed": os.path.basename(os.path.dirname(ck)), "acc": float((pred == y).mean()),
              "recall": float(pred[y == 1].mean()), "spec": float((~pred[y == 0]).mean()), "auc": float(roc_auc_score(y, p))}

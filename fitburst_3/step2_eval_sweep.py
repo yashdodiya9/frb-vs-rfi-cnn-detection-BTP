@@ -59,14 +59,14 @@ def analyze(snr, scale, probs):
 
 
 # ------------------------------------------------------------------ scoring (needs torch)
-def score_group(root, arrays, device):
-    import torch
-    from step1_lib import FRBCNN, predict_arrays
+def score_group(root, raws, device):
+    """raws: a RawScorer (preferred, shares the preprocessing cache across groups) or a list of RAW images.
+    Each checkpoint is scored on input preprocessed with the resize mode it was trained with."""
+    from step1_lib import RawScorer, score_checkpoint
+    scorer = raws if isinstance(raws, RawScorer) else RawScorer(raws)
     out = {}
     for ck in sorted(glob.glob(os.path.join(root, "seed_*", "best_model.pt"))):
-        m = FRBCNN().to(device)
-        m.load_state_dict(torch.load(ck, map_location=device)["model_state"])
-        out[os.path.basename(os.path.dirname(ck))] = predict_arrays(m, arrays, device)
+        out[os.path.basename(os.path.dirname(ck))] = score_checkpoint(ck, scorer, device)
     return out
 
 
@@ -82,7 +82,7 @@ def main():
     import matplotlib
     matplotlib.use("Agg")
     import matplotlib.pyplot as plt
-    from step1_lib import pick_device, preprocess_array
+    from step1_lib import RawScorer, pick_device
 
     files = sorted(glob.glob(os.path.join(args.sweep_dir, "*.npz")))
     if not files:
@@ -91,16 +91,17 @@ def main():
     for f in files:
         z = np.load(f, allow_pickle=True)
         meta = z["metadata"].item()
-        arrays.append(preprocess_array(z["data_full"])); snr.append(meta["snr_mf"]); scale.append(meta["scale"])
+        arrays.append(z["data_full"]); snr.append(meta["snr_mf"]); scale.append(meta["scale"])
     snr, scale = np.array(snr), np.array(scale)
     print(f"{len(files)} sweep images ({int((scale == 0).sum())} burst-free); measured S/N of bursts: "
           f"5th/50th/95th percentile = {np.percentile(snr[scale > 0], 5):.1f} / {np.percentile(snr[scale > 0], 50):.1f} / {np.percentile(snr[scale > 0], 95):.1f}")
 
     device = pick_device(args.force_cpu)
+    scorer = RawScorer(arrays)          # raw images; preprocessed once per resize mode
     results = {}
     for spec in args.groups:
         name, root = spec.split("=", 1)
-        probs = score_group(root, arrays, device)
+        probs = score_group(root, scorer, device)
         if not probs:
             print(f"warning: no checkpoints under {root}, skipping {name}"); continue
         results[name] = {seed: analyze(snr, scale, p) for seed, p in probs.items()}

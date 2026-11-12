@@ -32,7 +32,7 @@ import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
-from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array
+from step1_lib import FRBCNN, pick_device, predict_arrays, preprocess_array, require_interp
 
 TEAL, ORANGE, NAVY, GREY = "#1b998b", "#e07a1f", "#1f3a5f", "#8a94a0"
 
@@ -77,7 +77,8 @@ def main():
     results, diffs = [], []
     for ck in ckpts:
         model = FRBCNN().to(device)
-        model.load_state_dict(torch.load(ck, map_location=device)["model_state"])
+        _ck = torch.load(ck, map_location=device); require_interp(_ck, ck)
+        model.load_state_dict(_ck["model_state"])
         pw, pn = predict_arrays(model, A_w, device), predict_arrays(model, A_n, device)
         sw, sn = predict_arrays(model, S_w, device), predict_arrays(model, S_n, device)
         r = {"seed": os.path.basename(os.path.dirname(ck)),

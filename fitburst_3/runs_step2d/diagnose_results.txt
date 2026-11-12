@@ -1,0 +1,70 @@
+10 models pooled | 7990 burst images, 799 burst-free
+S/N band 8-20: 1599 burst images, overall recall 0.691  (95% CI 0.672-0.711)
+
+Recall by NATIVE WINDOW LENGTH (samples; the CNN sees 256 bins -> long windows are downsampled):
+            group     n  recall          95% CI  geo-mean S/N
+             0-64   843   0.755  [0.728, 0.779]          12.9
+           64-128   244   0.722  [0.675, 0.766]          12.8
+          128-256   211   0.701  [0.648, 0.747]          12.8
+          256-512   301   0.482  [0.440, 0.526]          12.9
+   check: 'geo-mean S/N' should be similar across rows, otherwise S/N is confounding the comparison
+
+Recall by FRACTION OF MASKED CHANNELS (terciles):
+            group     n  recall          95% CI  geo-mean S/N
+          0-0.188   385   0.620  [0.580, 0.657]          12.9
+      0.188-0.375   603   0.675  [0.643, 0.706]          12.9
+      0.375-0.512   611   0.753  [0.723, 0.780]          12.8
+
+Recall by BURST WIDTH in ms (catalog, terciles):
+            group     n  recall          95% CI  geo-mean S/N
+    0.00282-0.489   533   0.741  [0.708, 0.769]          12.9
+       0.489-1.24   533   0.720  [0.689, 0.749]          12.9
+        1.24-25.9   533   0.613  [0.579, 0.647]          12.8
+
+Recall by SCATTERING TIME in ms (catalog, terciles):
+            group     n  recall          95% CI  geo-mean S/N
+           0-3.73  1064   0.727  [0.704, 0.750]          12.8
+         3.73-278   535   0.621  [0.587, 0.654]          12.9
+
+Recall WITH vs WITHOUT each effect present in the image (same S/N band), sorted by difference:
+   effect                             with (n)      without (n)    diff
+   aircraft_rfi                 0.561 ( 116)    0.702 (1483)  -0.140
+   impulsive_mimic              0.601 (  98)    0.697 (1501)  -0.096
+   periodic_rfi                 0.626 ( 168)    0.699 (1431)  -0.073
+   pulsar_periodic              0.645 ( 234)    0.699 (1365)  -0.054
+   gain_drift_smooth            0.663 ( 571)    0.707 (1028)  -0.044
+   narrowband_bright            0.661 ( 423)    0.702 (1176)  -0.041
+   scintillation_solar          0.664 ( 109)    0.693 (1490)  -0.029
+   time_dropout                 0.681 ( 305)    0.694 (1294)  -0.013
+   impulsive_rfi                0.682 ( 344)    0.694 (1255)  -0.012
+   quantization                 0.685 ( 451)    0.694 (1148)  -0.009
+   rfi_storm                    0.686 ( 266)    0.692 (1333)  -0.006
+   narrowband_zero              0.691 ( 353)    0.692 (1246)  -0.001
+   scintillation_ionospheric    0.696 (  74)    0.691 (1525)  +0.005
+   gain_jump                    0.720 ( 225)    0.687 (1374)  +0.033
+   pure_noise                   0.733 ( 123)    0.688 (1476)  +0.044
+
+FALSE-POSITIVE rate on burst-free copies, by effect present in that background:
+   impulsive_mimic              0.327  [0.231, 0.433]  n=49
+   impulsive_rfi                0.086  [0.053, 0.118]  n=174
+   periodic_rfi                 0.044  [0.011, 0.082]  n=79
+   aircraft_rfi                 0.043  [0.011, 0.087]  n=61
+   scintillation_solar          0.039  [0.000, 0.098]  n=51
+   time_dropout                 0.037  [0.014, 0.063]  n=145
+   narrowband_zero              0.035  [0.016, 0.058]  n=179
+   quantization                 0.028  [0.013, 0.044]  n=230
+   gain_drift_smooth            0.027  [0.013, 0.044]  n=281
+   ALL burst-free images        0.026  [0.017, 0.035]  n=799
+   gain_jump                    0.025  [0.008, 0.045]  n=111
+   pulsar_periodic              0.025  [0.006, 0.051]  n=108
+   narrowband_bright            0.023  [0.011, 0.036]  n=212
+   rfi_storm                    0.014  [0.003, 0.030]  n=135
+   scintillation_ionospheric    0.013  [0.000, 0.037]  n=38
+   pure_noise                   0.000  [0.000, 0.000]  n=65
+
+S/N at 50% recall by NATIVE WINDOW LENGTH, per model group (logistic fit):
+   window (samples)                Step 2 models (interp)             Area-averaging models
+   0-64 (n=4380)                                     9.15                              9.44
+   64-128 (n=1170)                                   8.37                              9.07
+   128-256 (n=1050)                                  9.31                              9.52
+   256-inf (n=1390)                                 13.13                             12.37

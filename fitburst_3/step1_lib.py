@@ -53,10 +53,26 @@ class FRBCNN(nn.Module):
 
 
 # --------------------------------------------------------- preprocessing
-def resize_time_axis(arr: np.ndarray, target_time: int) -> np.ndarray:
+def area_resample_time(arr: np.ndarray, target_time: int) -> np.ndarray:
+    """Exact area (block) averaging of the time axis from T > target samples to `target` bins.
+    Bin edges are fractional, so any T works; every native sample contributes to the output
+    (unlike interpolation, which only reads ~2 samples per output bin when downsampling)."""
+    n_f, t = arr.shape
+    csum = np.concatenate([np.zeros((n_f, 1)), np.cumsum(arr, axis=1, dtype=np.float64)], axis=1)
+    edges = np.linspace(0.0, float(t), target_time + 1)
+    idx = np.arange(t + 1, dtype=np.float64)
+    at_edges = np.stack([np.interp(edges, idx, csum[i]) for i in range(n_f)])
+    return ((at_edges[:, 1:] - at_edges[:, :-1]) / (t / target_time)).astype(np.float32)
+
+
+def resize_time_axis(arr: np.ndarray, target_time: int, mode: str = "interp") -> np.ndarray:
+    """mode='interp' (Step 0-2 behaviour): linear interpolation for any length.
+    mode='area': block-average when downsampling (T > target); upsampling still uses interpolation."""
     t_native = arr.shape[1]
     if t_native == target_time:
         return arr
+    if mode == "area" and t_native > target_time:
+        return area_resample_time(arr, target_time)
     x_old = np.linspace(0.0, 1.0, t_native)
     x_new = np.linspace(0.0, 1.0, target_time)
     out = np.empty((arr.shape[0], target_time), dtype=np.float32)
@@ -75,24 +91,24 @@ def robust_normalize(arr: np.ndarray) -> np.ndarray:
     return (arr - med) / (1.4826 * mad)
 
 
-def preprocess_array(arr: np.ndarray) -> np.ndarray:
+def preprocess_array(arr: np.ndarray, mode: str = "interp") -> np.ndarray:
     """raw data_full -> resized + normalized + clipped (256x256 float32).
     Same operations, same order as DynSpecDataset.__getitem__ in the notebook
     (augmentation happens after this, clipping is re-applied after it)."""
     arr = arr.astype(np.float32)
     if arr.shape[0] != FREQ_BINS:
         raise ValueError(f"expected {FREQ_BINS} freq channels, got {arr.shape[0]}")
-    arr = resize_time_axis(arr, TIME_BINS)
+    arr = resize_time_axis(arr, TIME_BINS, mode)
     arr = robust_normalize(arr)
     return np.nan_to_num(np.clip(arr, -8.0, 8.0), nan=0.0, posinf=8.0, neginf=-8.0).astype(np.float32)
 
 
-def load_preprocessed(path: str):
+def load_preprocessed(path: str, mode: str = "interp"):
     """Returns preprocessed array, or None if the raw file is non-finite."""
     raw = np.load(path, allow_pickle=True)["data_full"]
     if not np.all(np.isfinite(raw)):
         return None
-    return preprocess_array(raw)
+    return preprocess_array(raw, mode)
 
 
 def augment(arr: np.ndarray) -> np.ndarray:
@@ -136,7 +152,7 @@ class CachedDataset(Dataset):
         return torch.from_numpy(np.ascontiguousarray(arr)).unsqueeze(0), torch.tensor(self.y[j], dtype=torch.float32)
 
 
-def build_cache(frb_dir: str, rfi_dir: str):
+def build_cache(frb_dir: str, rfi_dir: str, mode: str = "interp"):
     """Preprocess every file ONCE. Returns dict with X, y, paths."""
     items = [(str(p), 1) for p in sorted(Path(frb_dir).glob("*.npz"))] + \
             [(str(p), 0) for p in sorted(Path(rfi_dir).glob("*.npz"))]
@@ -144,7 +160,7 @@ def build_cache(frb_dir: str, rfi_dir: str):
         raise SystemExit("no .npz files found")
     X, y, paths, bad = [], [], [], 0
     for k, (p, lab) in enumerate(items):
-        arr = load_preprocessed(p)
+        arr = load_preprocessed(p, mode)
         if arr is None:
             bad += 1
             continue
@@ -152,7 +168,7 @@ def build_cache(frb_dir: str, rfi_dir: str):
         if (k + 1) % 1000 == 0:
             print(f"  preprocessed {k + 1}/{len(items)}")
     print(f"cache: {len(X)} clean files, {bad} rejected (NaN/Inf)")
-    return {"X": np.stack(X), "y": np.array(y, dtype=np.float32), "paths": paths}
+    return {"X": np.stack(X), "y": np.array(y, dtype=np.float32), "paths": paths, "mode": mode}
 
 
 # ----------------------------------------------------------------- split
@@ -249,3 +265,37 @@ def predict_arrays(model, arrays, device, batch=64):
         x = torch.from_numpy(np.stack(arrays[i:i + batch])[:, None]).float().to(device)
         out.append(torch.sigmoid(model(x)).cpu().numpy())
     return np.concatenate(out)
+
+
+# ------------------------------------------------ checkpoint-aware scoring (Step 2d)
+def ckpt_resize_mode(ckpt: dict) -> str:
+    """Checkpoints from Step 0-2 have no 'resize_mode' key: they were trained with interpolation."""
+    return ckpt.get("resize_mode", "interp")
+
+
+def require_interp(ckpt: dict, path: str):
+    """Guard for scripts that preprocess with the default (interp) mode only."""
+    if ckpt_resize_mode(ckpt) != "interp":
+        raise SystemExit(f"{path} was trained with resize_mode='{ckpt_resize_mode(ckpt)}'; this script only supports "
+                         f"interp checkpoints. Use step2_eval_sweep.py / step2_diagnose_sweep.py for those.")
+
+
+class RawScorer:
+    """Holds RAW images and preprocesses them once per resize mode, so models trained with
+    different preprocessing are each scored on correctly preprocessed input."""
+
+    def __init__(self, raws):
+        self.raws = raws
+        self._cache = {}
+
+    def arrays(self, mode: str):
+        if mode not in self._cache:
+            self._cache[mode] = [preprocess_array(r, mode) for r in self.raws]
+        return self._cache[mode]
+
+
+def score_checkpoint(ck_path: str, scorer: "RawScorer", device):
+    ck = torch.load(ck_path, map_location=device)
+    model = FRBCNN().to(device)
+    model.load_state_dict(ck["model_state"])
+    return predict_arrays(model, scorer.arrays(ckpt_resize_mode(ck)), device)

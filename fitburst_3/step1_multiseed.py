@@ -50,6 +50,8 @@ def main():
     ap.add_argument("--batch-size", type=int, default=32)
     ap.add_argument("--lr", type=float, default=1e-3)
     ap.add_argument("--weight-decay", type=float, default=1e-4)
+    ap.add_argument("--resize-mode", choices=["interp", "area"], default="interp",
+                    help="how windows longer than 256 samples are shrunk: interp (Step 0-2) or area (block averaging)")
     ap.add_argument("--force-cpu", action="store_true")
     ap.add_argument("--no-resume", action="store_true", help="retrain seeds even if finished")
     args = ap.parse_args()
@@ -59,8 +61,8 @@ def main():
     os.makedirs(args.outdir, exist_ok=True)
 
     t0 = time.time()
-    print("preprocessing all images once (cached in RAM) ...")
-    cache = build_cache(args.frb_dir, args.rfi_dir)
+    print(f"preprocessing all images once (cached in RAM), resize mode = {args.resize_mode} ...")
+    cache = build_cache(args.frb_dir, args.rfi_dir, args.resize_mode)
     labels = cache["y"].astype(int)
     print(f"  {int(labels.sum())} FRB / {int((1 - labels).sum())} RFI   ({time.time() - t0:.0f}s)")
 
@@ -107,7 +109,7 @@ def main():
             if vam["f1"] > best_f1:
                 best_f1, no_improve = vam["f1"], 0
                 torch.save({"model_state": model.state_dict(), "epoch": epoch, "val_f1": best_f1,
-                            "seed": seed}, best_path)
+                            "seed": seed, "resize_mode": args.resize_mode}, best_path)
             else:
                 no_improve += 1
                 if no_improve >= args.patience:
