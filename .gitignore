@@ -14,3 +14,5 @@ sim_paired/
 
 # model weights (reproducible; use --with-models or Git LFS if you want them tracked)
 *.pt
+*.h5
+real_cache*.npz

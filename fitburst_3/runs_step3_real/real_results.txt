@@ -1,0 +1,23 @@
+
+group                             recall on real bursts   false alarms on real backgrounds
+Step 2 models (interp)            0.982 [0.979-0.984]              0.066 [0.018-0.147]
+Area-averaging models             0.980 [0.977-0.982]              0.034 [0.010-0.067]
+
+Recall on real bursts vs catalog detection S/N (bonsai_snr); mean over seeds:
+        S/N bin     n         Step 2 models (interp)         Area-averaging models
+           0-10   291                          0.954                         0.946
+          10-12   264                          0.973                         0.974
+          12-15   260                          0.985                         0.982
+          15-20   235                          0.996                         0.996
+          20-30   205                          1.000                         1.000
+          30-50   144                          1.000                         1.000
+         50-100    88                          0.980                         0.977
+           >100    13                            nan                           nan
+
+Recall by window length (samples), mean over seeds:
+   0-64           766                          0.988                         0.985
+   64-100         164                          0.898                         0.891
+   100-130         65                          0.982                         0.985
+   130-163        476                          1.000                         1.000
+
+Caveats: detected bursts only (biased to S/N >~ 9); negatives are real backgrounds, not real RFI candidates; bonsai S/N is not the simulated matched-filter S/N; real windows are shorter than the simulator's for some bursts.
